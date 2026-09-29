@@ -51,6 +51,7 @@ const times = computed(() => {
   gap: 0 0.8em;
   padding: 0.5em 0;
   border-bottom: 1px solid var(--line);
+  cursor: pointer;
 }
 .route {
   font-size: 2.2em;

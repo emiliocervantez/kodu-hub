@@ -7,7 +7,7 @@ A hallway wall dashboard that answers "can I leave now, and what's it like outsi
 ### Transport
 
 **Watch**:
-One route, travelling in one direction, boarded at one stop, that the household wants to track. The dashboard shows one row per Watch; at most four exist.
+One route, travelling in one direction, boarded at one stop, that the household wants to track. The dashboard shows one row per Watch; at most six exist.
 _Avoid_: Favourite, subscription, watched stop
 
 **Route**:

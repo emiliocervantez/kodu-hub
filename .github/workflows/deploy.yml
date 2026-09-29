@@ -19,15 +19,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Must precede setup-node so its yarn cache step finds the pinned Yarn.
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+          cache: yarn
+      - run: yarn install --immutable
       # Refresh the stop code → SIRI id map; keep the committed one if Tallinn is unreachable.
-      - run: npm run stops || echo "stops.txt unavailable, using committed map"
-      - run: npm test
-      - run: npm run build
+      - run: yarn stops || echo "stops.txt unavailable, using committed map"
+      - run: yarn test
+      - run: yarn build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

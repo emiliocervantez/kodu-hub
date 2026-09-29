@@ -1,151 +1,177 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { fetchDirections, fetchRoutes, type Direction, type Route } from '../lib/peatus'
+import { computed, ref } from 'vue'
+import Button from 'primevue/button'
+import DatePicker from 'primevue/datepicker'
+import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import Message from 'primevue/message'
+import SelectButton from 'primevue/selectbutton'
+import ToggleSwitch from 'primevue/toggleswitch'
+import RoutePicker, { type Picked } from './RoutePicker.vue'
 import { MAX_WATCHES, settings } from '../lib/settings'
 
 const emit = defineEmits<{ close: [] }>()
 
-const routes = ref<Route[]>([])
-const directions = ref<Direction[]>([])
 const error = ref('')
-
-const route = ref<Route>()
-const direction = ref<Direction>()
-const stopIndex = ref<number>()
+const picker = ref<InstanceType<typeof RoutePicker>>()
+const picked = ref<Picked>()
 const walkMin = ref(5)
 
-const stop = computed(() =>
-  direction.value && stopIndex.value !== undefined ? direction.value.stops[stopIndex.value] : undefined,
-)
-const canAdd = computed(() => !!(route.value && direction.value && stop.value?.siriId))
+const THEMES = [
+  { label: 'Тёмная', value: 'dark' },
+  { label: 'Светлая', value: 'light' },
+]
 
-async function guard(fn: () => Promise<unknown>) {
-  error.value = ''
-  try {
-    await fn()
-  } catch (e) {
-    error.value = `Ошибка загрузки: ${(e as Error).message}`
-  }
-}
-
-onMounted(() => guard(async () => (routes.value = await fetchRoutes())))
-
-watch(route, (r) => {
-  direction.value = undefined
-  directions.value = []
-  if (r) guard(async () => (directions.value = await fetchDirections(r.id)))
-})
-watch(direction, () => (stopIndex.value = undefined))
+const canAdd = computed(() => !!picked.value?.stop.siriId)
 
 function add() {
-  if (!route.value || !direction.value || !stop.value?.siriId) return
+  const p = picked.value
+  if (!p?.stop.siriId) return
   settings.watches.push({
     id: crypto.randomUUID(),
-    route: route.value.name,
-    kind: route.value.kind,
-    headsign: direction.value.headsign,
-    stopName: stop.value.name,
-    siriId: stop.value.siriId,
+    route: p.route.name,
+    kind: p.route.kind,
+    headsign: p.direction.headsign,
+    stopName: p.stop.name,
+    siriId: p.stop.siriId,
+    stopId: p.stop.id,
     walkMin: walkMin.value,
   })
-  route.value = undefined
+  picker.value?.reset()
+}
+
+// "Готово" also saves a fully filled-in but not yet added Watch.
+function done() {
+  if (canAdd.value && settings.watches.length < MAX_WATCHES) add()
+  emit('close')
 }
 
 function remove(id: string) {
   settings.watches = settings.watches.filter((w) => w.id !== id)
 }
 
-const KIND = { bus: 'автобус', trol: 'троллейбус', tram: 'трамвай' }
+// DatePicker works with Date; settings store "HH:MM".
+function toDate(hhmm: string): Date {
+  const [h, m] = hhmm.split(':').map(Number)
+  const d = new Date()
+  d.setHours(h, m, 0, 0)
+  return d
+}
+function toHHMM(d: unknown): string | undefined {
+  if (!(d instanceof Date)) return undefined
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+function setTime(key: 'lightFrom' | 'darkFrom', d: unknown) {
+  const hhmm = toHHMM(d)
+  if (hhmm) settings[key] = hhmm
+}
 </script>
 
 <template>
-  <div class="overlay">
-    <div class="panel">
-      <header>
-        <h2>Настройки</h2>
-        <button class="close" @click="emit('close')">Готово</button>
-      </header>
-
-      <h3>Маршруты ({{ settings.watches.length }}/{{ MAX_WATCHES }})</h3>
+  <Dialog
+    :visible="true"
+    modal
+    header="Настройки"
+    :draggable="false"
+    :style="{ width: 'min(60rem, 95vw)' }"
+    @update:visible="emit('close')"
+  >
+    <section>
+      <h3>Маршруты <span class="count">{{ settings.watches.length }}/{{ MAX_WATCHES }}</span></h3>
       <ul class="watches">
         <li v-for="w in settings.watches" :key="w.id">
-          <span><b>{{ w.route }}</b> → {{ w.headsign }} · {{ w.stopName }}</span>
-          <label>пешком <input v-model.number="w.walkMin" type="number" min="0" max="60" /> мин</label>
-          <button @click="remove(w.id)">Удалить</button>
+          <span class="watch-name"><b>{{ w.route }}</b> → {{ w.headsign }} · {{ w.stopName }}</span>
+          <InputNumber v-model="w.walkMin" :min="0" :max="60" suffix=" мин" show-buttons input-class="walk" />
+          <Button label="Удалить" severity="danger" text @click="remove(w.id)" />
         </li>
         <li v-if="settings.watches.length === 0" class="muted">Нет маршрутов</li>
       </ul>
+    </section>
 
-      <template v-if="settings.watches.length < MAX_WATCHES">
-        <h3>Добавить</h3>
-        <div class="form">
-          <label>
-            Маршрут
-            <select v-model="route">
-              <option :value="undefined" disabled>—</option>
-              <option v-for="r in routes" :key="r.id" :value="r">{{ r.name }} ({{ KIND[r.kind] }})</option>
-            </select>
-          </label>
-          <label>
-            Направление
-            <select v-model="direction" :disabled="!directions.length">
-              <option :value="undefined" disabled>—</option>
-              <option v-for="d in directions" :key="d.headsign" :value="d">→ {{ d.headsign }}</option>
-            </select>
-          </label>
-          <label>
-            Остановка
-            <select v-model="stopIndex" :disabled="!direction">
-              <option :value="undefined" disabled>—</option>
-              <option v-for="(s, i) in direction?.stops" :key="i" :value="i" :disabled="!s.siriId">
-                {{ s.name }}{{ s.siriId ? '' : ' (нет данных)' }}
-              </option>
-            </select>
-          </label>
-          <label>
-            Пешком, мин
-            <input v-model.number="walkMin" type="number" min="0" max="60" />
-          </label>
-          <button :disabled="!canAdd" @click="add">Добавить</button>
-        </div>
-      </template>
-
-      <h3>Погода: координаты</h3>
-      <div class="form">
-        <label>Широта <input v-model.number="settings.lat" type="number" step="0.001" /></label>
-        <label>Долгота <input v-model.number="settings.lon" type="number" step="0.001" /></label>
+    <section v-if="settings.watches.length < MAX_WATCHES">
+      <h3>Добавить</h3>
+      <div class="grid">
+        <RoutePicker ref="picker" v-model="picked" @error="error = $event" />
+        <label>
+          Пешком
+          <InputNumber v-model="walkMin" :min="0" :max="60" suffix=" мин" show-buttons input-class="walk" />
+        </label>
       </div>
+      <Button label="Добавить" :disabled="!canAdd" class="add" @click="add" />
+    </section>
 
-      <p v-if="error" class="error">{{ error }}</p>
-    </div>
-  </div>
+    <section>
+      <h3>Тема</h3>
+      <div class="row">
+        <SelectButton
+          v-model="settings.theme"
+          :options="THEMES"
+          option-label="label"
+          option-value="value"
+          :allow-empty="false"
+          :disabled="settings.autoTheme"
+        />
+        <label class="inline"><ToggleSwitch v-model="settings.autoTheme" /> Автоматически</label>
+      </div>
+      <div class="row">
+        <label>
+          Светлая с
+          <DatePicker
+            :model-value="toDate(settings.lightFrom)"
+            time-only
+            hour-format="24"
+            :disabled="!settings.autoTheme"
+            input-class="time"
+            @update:model-value="setTime('lightFrom', $event)"
+          />
+        </label>
+        <label>
+          Тёмная с
+          <DatePicker
+            :model-value="toDate(settings.darkFrom)"
+            time-only
+            hour-format="24"
+            :disabled="!settings.autoTheme"
+            input-class="time"
+            @update:model-value="setTime('darkFrom', $event)"
+          />
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h3>Погода: координаты</h3>
+      <div class="row">
+        <label>
+          Широта
+          <InputNumber v-model="settings.lat" :min-fraction-digits="3" :max-fraction-digits="4" locale="en-US" :use-grouping="false" />
+        </label>
+        <label>
+          Долгота
+          <InputNumber v-model="settings.lon" :min-fraction-digits="3" :max-fraction-digits="4" locale="en-US" :use-grouping="false" />
+        </label>
+      </div>
+    </section>
+
+    <Message v-if="error" severity="error" class="error">{{ error }}</Message>
+
+    <template #footer>
+      <Button label="Готово" @click="done" />
+    </template>
+  </Dialog>
 </template>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow-y: auto;
-  padding: 2em 1em;
+section + section {
+  margin-top: 1.5rem;
 }
-.panel {
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 1.2em 1.6em;
-  width: min(900px, 100%);
-}
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-h2,
 h3 {
-  margin: 0.6em 0 0.4em;
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+}
+.count {
+  font-weight: 400;
+  color: var(--p-text-muted-color);
 }
 .watches {
   list-style: none;
@@ -154,50 +180,53 @@ h3 {
 }
 .watches li {
   display: flex;
-  gap: 1em;
+  gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
-  padding: 0.4em 0;
-  border-bottom: 1px solid var(--line);
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--p-content-border-color);
 }
-.watches li span {
+.watch-name {
   flex: 1;
 }
-.form {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+.row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8em;
+  gap: 1.5rem;
   align-items: flex-end;
 }
-.form label {
+.row + .row {
+  margin-top: 1rem;
+}
+label {
   display: flex;
   flex-direction: column;
-  gap: 0.2em;
-  color: var(--muted);
+  gap: 0.35rem;
+  color: var(--p-text-muted-color);
 }
-select,
-input,
-button {
-  font: inherit;
-  padding: 0.4em 0.6em;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--fg);
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--p-text-color);
 }
-input[type='number'] {
-  width: 6em;
-}
-button {
-  cursor: pointer;
-}
-button:disabled {
-  opacity: 0.4;
+.add {
+  margin-top: 1rem;
 }
 .muted {
-  color: var(--muted);
+  color: var(--p-text-muted-color);
 }
 .error {
-  color: var(--warn);
+  margin-top: 1rem;
+}
+:deep(.walk) {
+  width: 7.5rem;
+}
+:deep(.time) {
+  width: 6rem;
 }
 </style>

@@ -6,7 +6,7 @@ The dashboard provides at-a-glance information needed before leaving home:
 
 - Current date and time
 - Local Tallinn weather
-- Upcoming Tallinn public transport departures for up to four watched routes
+- Upcoming Tallinn public transport departures for up to six watched routes
 
 The UI is in Russian. Domain terms (Watch, Boarding Stop, Walk Time, …) are defined in [CONTEXT.md](CONTEXT.md); key decisions are recorded in [docs/adr](docs/adr).
 
@@ -37,6 +37,7 @@ The application is a static web application built with:
 - Vue 3
 - TypeScript
 - Vite
+- PrimeVue 4 (Aura theme) for the settings panel
 - HTML/CSS
 - Browser Fetch API
 - Vitest (unit tests for parsing, filtering and formatting logic)
@@ -49,11 +50,13 @@ No native Android application is required.
 
 A **Watch** is one route, in one direction, boarded at one stop, for example bus 17 towards Balti jaam from Kaubamaja.
 
-- Up to 4 Watches, shown as one row each.
+- Up to 6 Watches, shown as one row each.
 - Each Watch has its own **Walk Time** (minutes from the door to the stop).
 - Each row shows the next 3 departures that are at least Walk Time away, as "N мин", or as clock time when more than 60 minutes away.
+- Tapping a row opens the full timetable for that route at that stop: workdays and weekends (Saturday and Sunday shown separately when they differ), from Peatus.ee.
+- The search icon (next to the settings gear) opens the same timetable for any route, direction and stop, without adding a Watch.
 
-Watches, Walk Times and the weather location are edited in an on-screen settings panel opened via a gear icon, and stored in the browser's `localStorage` on the tablet. A Watch is created by picking a route first, then its direction, then the boarding stop.
+Watches, Walk Times, the weather location and the light/dark theme (chosen manually, or switched automatically at set times of day) are edited in an on-screen settings panel opened via a gear icon, and stored in the browser's `localStorage` on the tablet. A Watch is created by picking a route first, then its direction, then the boarding stop.
 
 Only Tallinn city buses, trams and trolleybuses are supported.
 
@@ -65,7 +68,7 @@ All sources are queried directly from the browser; both send permissive CORS hea
 
 `https://api.peatus.ee/routing/v1/routers/estonia/index/graphql`
 
-Used by the settings panel to find routes, their directions and stops. Peatus stop ids don't always match SIRI stop ids, so stops are linked by their stop code through a map generated from Tallinn's `stops.txt` at build time (`npm run stops` → `src/data/siriIds.json`).
+Used by the settings panel to find routes, their directions and stops. Peatus stop ids don't always match SIRI stop ids, so stops are linked by their stop code through a map generated from Tallinn's `stops.txt` at build time (`yarn stops` → `src/data/siriIds.json`).
 
 ### Tallinn SIRI Stop Departures (live departures)
 
@@ -81,7 +84,7 @@ The dashboard shows:
 
 - Temperature and "feels like"
 - Current conditions (icon and Russian label)
-- Precipitation for the next 3 hours
+- Temperature and precipitation for each of the next 12 hours
 
 ## Stale Data
 

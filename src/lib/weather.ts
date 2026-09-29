@@ -4,15 +4,16 @@ export interface Weather {
   temperature: number
   feelsLike: number
   code: number
-  /** Precipitation (mm) and probability (%) for each of the next 3 hours. */
-  nextHours: { time: string; mm: number; probability: number }[]
+  /** Temperature (°C), precipitation (mm) and probability (%) for each of the next 12 hours. */
+  nextHours: { time: string; temperature: number; mm: number; probability: number }[]
 }
 
 export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     '&current=temperature_2m,apparent_temperature,weather_code' +
-    '&hourly=precipitation,precipitation_probability&forecast_hours=3&timezone=Europe%2FTallinn'
+    // Hourly data starts at the current (already begun) hour; fetch 13 and drop it.
+    '&hourly=temperature_2m,precipitation,precipitation_probability&forecast_hours=13&timezone=Europe%2FTallinn'
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Open-Meteo: HTTP ${res.status}`)
   const j = await res.json()
@@ -20,11 +21,14 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
     temperature: j.current.temperature_2m,
     feelsLike: j.current.apparent_temperature,
     code: j.current.weather_code,
-    nextHours: j.hourly.time.map((time: string, i: number) => ({
-      time: time.slice(11, 16),
-      mm: j.hourly.precipitation[i],
-      probability: j.hourly.precipitation_probability[i],
-    })),
+    nextHours: j.hourly.time
+      .map((time: string, i: number) => ({
+        time: time.slice(11, 16),
+        temperature: j.hourly.temperature_2m[i],
+        mm: j.hourly.precipitation[i],
+        probability: j.hourly.precipitation_probability[i],
+      }))
+      .slice(1),
   }
 }
 

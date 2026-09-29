@@ -18,26 +18,35 @@ const condition = computed(() => (data.value ? describeWeather(data.value.code) 
 
 <template>
   <div class="weather" :class="{ stale }">
-    <template v-if="data && condition">
-      <div class="main">
-        <span class="icon">{{ condition[1] }}</span>
-        <span class="temp">{{ Math.round(data.temperature) }}°</span>
+    <div v-if="data && condition" class="row">
+      <div class="now">
+        <div class="main">
+          <span class="icon">{{ condition[1] }}</span>
+          <span class="temp">{{ Math.round(data.temperature) }}°</span>
+          <span class="feels" title="ощущается как">({{ Math.round(data.feelsLike) }}°)</span>
+        </div>
+        <div class="desc">{{ condition[0] }}</div>
       </div>
-      <div class="desc">{{ condition[0] }}, ощущается как {{ Math.round(data.feelsLike) }}°</div>
       <div class="hours">
         <div v-for="h in data.nextHours" :key="h.time" class="hour">
           <div class="h-time">{{ h.time }}</div>
+          <div class="h-temp">{{ Math.round(h.temperature) }}°</div>
           <div>💧 {{ h.probability }}%</div>
           <div class="h-mm">{{ h.mm }} мм</div>
         </div>
       </div>
-    </template>
+    </div>
     <div v-else class="desc">…</div>
     <div v-if="stale" class="age">{{ updatedAgo(updatedAt, now) }}</div>
   </div>
 </template>
 
 <style scoped>
+.row {
+  display: flex;
+  align-items: center;
+  gap: 3vw;
+}
 .main {
   display: flex;
   align-items: center;
@@ -50,14 +59,28 @@ const condition = computed(() => (data.value ? describeWeather(data.value.code) 
   font-size: 4.5em;
   font-weight: 700;
 }
+.feels {
+  font-size: 2.2em;
+  color: var(--muted);
+  align-self: flex-end;
+  margin-bottom: 0.45em;
+}
 .desc {
   font-size: 1.4em;
 }
 .hours {
+  flex: 1;
   display: flex;
-  gap: 1.5em;
-  margin-top: 0.8em;
+  justify-content: space-between;
+  gap: 0.5em;
   font-size: 1.2em;
+}
+.hour {
+  text-align: center;
+}
+.h-temp {
+  font-size: 1.3em;
+  font-weight: 700;
 }
 .h-time,
 .h-mm {

@@ -1,4 +1,4 @@
-// Peatus.ee OpenTripPlanner GraphQL — used only by settings to build a Watch.
+// Peatus.ee OpenTripPlanner GraphQL — used by settings to build a Watch and for full timetables.
 import siriIds from '../data/siriIds.json'
 
 const URL = 'https://api.peatus.ee/routing/v1/routers/estonia/index/graphql'
@@ -14,7 +14,7 @@ export interface Route {
 
 export interface Direction {
   headsign: string
-  stops: { name: string; siriId: string | undefined }[]
+  stops: { id: string; name: string; siriId: string | undefined }[]
 }
 
 async function query<T>(q: string): Promise<T> {
@@ -47,16 +47,46 @@ export async function fetchRoutes(): Promise<Route[]> {
 
 export async function fetchDirections(routeId: string): Promise<Direction[]> {
   const data = await query<{
-    route: { patterns: { headsign: string; stops: { name: string; code: string }[] }[] }
-  }>(`{ route(id:"${routeId}"){ patterns{ headsign stops{ name code } } } }`)
+    route: { patterns: { headsign: string; stops: { gtfsId: string; name: string; code: string }[] }[] }
+  }>(`{ route(id:"${routeId}"){ patterns{ headsign stops{ gtfsId name code } } } }`)
   // A route has several patterns per direction (short turns etc.); keep the first per headsign.
   const byHeadsign = new Map<string, Direction>()
   for (const p of data.route.patterns) {
     if (byHeadsign.has(p.headsign)) continue
     byHeadsign.set(p.headsign, {
       headsign: p.headsign,
-      stops: p.stops.map((s) => ({ name: s.name, siriId: (siriIds as Record<string, string>)[s.code] })),
+      stops: p.stops.map((s) => ({
+        id: s.gtfsId,
+        name: s.name,
+        siriId: (siriIds as Record<string, string>)[s.code],
+      })),
     })
   }
   return [...byHeadsign.values()]
+}
+
+/** Scheduled departures (seconds since the service day's midnight, ascending) of a route at a stop on `date` (YYYYMMDD). */
+export async function fetchStopTimes(stopId: string, routeName: string, date: string): Promise<number[]> {
+  const data = await query<{
+    stop: {
+      stoptimesForServiceDate: {
+        pattern: { route: { shortName: string } }
+        stoptimes: { scheduledDeparture: number; pickupType: string }[]
+      }[]
+    }
+  }>(
+    `{ stop(id:"${stopId}"){ stoptimesForServiceDate(date:"${date}"){ pattern{ route{ shortName } } stoptimes{ scheduledDeparture pickupType } } } }`,
+  )
+  return data.stop.stoptimesForServiceDate
+    .filter((g) => g.pattern.route.shortName === routeName)
+    .flatMap((g) => g.stoptimes.filter((s) => s.pickupType !== 'NONE').map((s) => s.scheduledDeparture))
+    .sort((a, b) => a - b)
+}
+
+/** Peatus stop id for Watches saved before it was stored: found via route → direction → stop name. */
+export async function findStopId(route: string, kind: VehicleKind, headsign: string, stopName: string) {
+  const r = (await fetchRoutes()).find((x) => x.name === route && x.kind === kind)
+  if (!r) return undefined
+  const d = (await fetchDirections(r.id)).find((x) => x.headsign === headsign)
+  return d?.stops.find((s) => s.name === stopName)?.id
 }

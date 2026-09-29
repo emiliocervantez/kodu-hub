@@ -1,7 +1,7 @@
 import { reactive, watch } from 'vue'
 import type { VehicleKind } from './peatus'
 
-export const MAX_WATCHES = 4
+export const MAX_WATCHES = 6
 
 export interface Watch {
   id: string
@@ -10,17 +10,34 @@ export interface Watch {
   headsign: string
   stopName: string
   siriId: string
+  /** Peatus stop id, for the full timetable. Missing on Watches saved before it was added. */
+  stopId?: string
   walkMin: number
 }
+
+export type Theme = 'dark' | 'light'
 
 export interface Settings {
   watches: Watch[]
   lat: number
   lon: number
+  theme: Theme
+  /** When on, the theme follows the lightFrom/darkFrom schedule (HH:MM, Tallinn time) instead of `theme`. */
+  autoTheme: boolean
+  lightFrom: string
+  darkFrom: string
 }
 
 const KEY = 'kodu-hub:settings'
-const DEFAULTS: Settings = { watches: [], lat: 59.437, lon: 24.7536 }
+const DEFAULTS: Settings = {
+  watches: [],
+  lat: 59.437,
+  lon: 24.7536,
+  theme: 'dark',
+  autoTheme: false,
+  lightFrom: '07:00',
+  darkFrom: '21:00',
+}
 
 function load(): Settings {
   try {

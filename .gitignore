@@ -20,3 +20,11 @@ Gemfile.lock
 # Node / Vite
 node_modules/
 dist/
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

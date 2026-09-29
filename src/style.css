@@ -8,6 +8,16 @@
   color-scheme: dark;
 }
 
+:root[data-theme='light'] {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --fg: #15181c;
+  --muted: #5b6572;
+  --line: #d7dce2;
+  --warn: #9a4f00;
+  color-scheme: light;
+}
+
 html,
 body {
   margin: 0;
