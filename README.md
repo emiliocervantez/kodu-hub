@@ -85,6 +85,7 @@ The dashboard shows:
 - Temperature and "feels like"
 - Current conditions (icon and Russian label)
 - Temperature and precipitation for each of the next 12 hours
+- Tapping the weather row opens a 7-day forecast (condition, high/low, rain chance and amount)
 
 ## Stale Data
 

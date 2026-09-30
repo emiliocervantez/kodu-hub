@@ -32,6 +32,44 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
   }
 }
 
+export interface DayForecast {
+  /** "YYYY-MM-DD", Tallinn date */
+  date: string
+  code: number
+  max: number
+  min: number
+  mm: number
+  probability: number
+}
+
+/** Daily forecast for today and the following 6 days. */
+export async function fetchDailyForecast(lat: number, lon: number): Promise<DayForecast[]> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max' +
+    '&forecast_days=7&timezone=Europe%2FTallinn'
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Open-Meteo: HTTP ${res.status}`)
+  const d = (await res.json()).daily
+  return d.time.map((date: string, i: number) => ({
+    date,
+    code: d.weather_code[i],
+    max: d.temperature_2m_max[i],
+    min: d.temperature_2m_min[i],
+    mm: d.precipitation_sum[i],
+    probability: d.precipitation_probability_max[i],
+  }))
+}
+
+/** "Сегодня" / "Завтра" / weekday name, and "1 окт." for a forecast day at position `index`. */
+export function dayLabel(date: string, index: number): [string, string] {
+  // Parse as UTC and format in UTC so the calendar date never shifts.
+  const d = new Date(`${date}T00:00:00Z`)
+  const weekday = d.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: 'UTC' })
+  const name = index === 0 ? 'Сегодня' : index === 1 ? 'Завтра' : weekday[0].toUpperCase() + weekday.slice(1)
+  return [name, d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', timeZone: 'UTC' })]
+}
+
 /** WMO weather code → [Russian label, icon]. */
 export function describeWeather(code: number): [string, string] {
   if (code === 0) return ['Ясно', '☀️']
