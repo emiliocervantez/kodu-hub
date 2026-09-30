@@ -103,7 +103,7 @@ GitHub repository
 → GitHub Pages  
 → Android tablet running Fully Kiosk Browser
 
-Deployment happens automatically after each push to the repository.
+Deployment happens automatically after each push to the repository. See [docs/DEPLOY.md](docs/DEPLOY.md) for setup and troubleshooting, and [docs/BUILD.md](docs/BUILD.md) for building and serving locally.
 
 For a project repository hosted under GitHub Pages, Vite's `base` configuration should correspond to the repository path:
 
