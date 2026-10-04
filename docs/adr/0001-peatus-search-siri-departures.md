@@ -8,4 +8,5 @@ The app is a static site with no proxy, so every data source must allow cross-or
 - Peatus labels trolleybuses as mode `BUS`; the vehicle kind is read from the route id (`tallinna-lin_bus_`, `_trol_`, `_tram_`).
 - Two external sources to maintain; SIRI is an undocumented CSV that could change without notice. Peatus `stoptimesWithoutPatterns` is the fallback if it does.
 - Coverage is limited to Tallinn city transport (SIRI covers only Tallinn stops).
-- **To verify:** the SIRI row format was only observed at night (header line only). Confirm the row shape — and whether trams appear as `1` or `T1` — during service hours.
+- SIRI row format confirmed against live data (2026-10-04): `bus,10,83916,83916,Vana-Pääsküla,127,Z` — transport, route, expected and scheduled seconds since midnight, destination. A `stop,<id>` line follows the header.
+- **To verify:** whether trams appear as `1` or `T1` (the parser accepts both).

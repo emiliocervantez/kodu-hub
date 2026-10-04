@@ -28,3 +28,6 @@ dist/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# docs
+docs/.obsidian

@@ -13,11 +13,13 @@ const SettingsPanel = defineAsyncComponent(() => import('./components/SettingsPa
 const TimetablePanel = defineAsyncComponent(() => import('./components/TimetablePanel.vue'))
 const SearchPanel = defineAsyncComponent(() => import('./components/SearchPanel.vue'))
 const ForecastPanel = defineAsyncComponent(() => import('./components/ForecastPanel.vue'))
+const CalendarPanel = defineAsyncComponent(() => import('./components/CalendarPanel.vue'))
 
 const now = useNow()
 const showSettings = ref(false)
 const showSearch = ref(false)
 const showForecast = ref(false)
+const showCalendar = ref(false)
 const timetableFor = ref<TimetableTarget>()
 
 function showTimetable(target: TimetableTarget) {
@@ -35,7 +37,7 @@ watchEffect(
 
 <template>
   <main>
-    <ClockPanel :now="now" />
+    <ClockPanel class="clickable" :now="now" @click="showCalendar = true" />
     <section class="right">
       <WatchRow v-for="w in settings.watches" :key="w.id" :watch="w" :now="now" @click="timetableFor = w" />
       <p v-if="settings.watches.length === 0" class="empty">Добавьте маршрут в настройках ⚙</p>
@@ -54,6 +56,7 @@ watchEffect(
     <SearchPanel v-if="showSearch" @close="showSearch = false" @show="showTimetable" />
     <TimetablePanel v-if="timetableFor" :watch="timetableFor" @close="timetableFor = undefined" />
     <ForecastPanel v-if="showForecast" @close="showForecast = false" />
+    <CalendarPanel v-if="showCalendar" @close="showCalendar = false" />
   </main>
 </template>
 
@@ -71,11 +74,15 @@ main {
   grid-column: 1 / -1;
   cursor: pointer;
 }
+.clickable {
+  cursor: pointer;
+  align-self: start;
+}
 .right {
   display: flex;
   flex-direction: column;
   /* keep clear of the fixed search and settings icons in the top-right corner */
-  padding-right: 5em;
+  padding-right: 7.5em;
 }
 .empty {
   font-size: 1.5em;
@@ -91,7 +98,7 @@ main {
 }
 .corner button {
   display: flex;
-  font-size: 1.6em;
+  font-size: 2.4em;
   padding: 0.1em 0.2em;
   background: none;
   border: none;

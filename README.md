@@ -54,6 +54,7 @@ A **Watch** is one route, in one direction, boarded at one stop, for example bus
 - Each Watch has its own **Walk Time** (minutes from the door to the stop).
 - Each row shows the next 3 departures that are at least Walk Time away, as "N мин", or as clock time when more than 60 minutes away.
 - Tapping a row opens the full timetable for that route at that stop: workdays and weekends (Saturday and Sunday shown separately when they differ), from Peatus.ee.
+- Tapping the clock opens a month calendar with Estonian public holidays marked.
 - The search icon (next to the settings gear) opens the same timetable for any route, direction and stop, without adding a Watch.
 
 Watches, Walk Times, the weather location and the light/dark theme (chosen manually, or switched automatically at set times of day) are edited in an on-screen settings panel opened via a gear icon, and stored in the browser's `localStorage` on the tablet. A Watch is created by picking a route first, then its direction, then the boarding stop.

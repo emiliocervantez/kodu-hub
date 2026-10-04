@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseSiri, sameRoute } from './siri'
 
-// Row shape is inferred (only the header was observed so far); see ADR 0001.
+// Row shape matches live data, e.g. "bus,10,83916,83916,Vana-Pääsküla,127,Z"; see ADR 0001.
 const SAMPLE = `Transport,RouteNum,ExpectedTimeInSeconds,ScheduleTimeInSeconds,36000,version20201024
 stop,1234
 bus,5,36300,36240,Metsakooli tee,0,Z
