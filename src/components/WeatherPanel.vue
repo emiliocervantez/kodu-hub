@@ -73,7 +73,7 @@ const condition = computed(() => (data.value ? describeWeather(data.value.code) 
   display: flex;
   justify-content: space-between;
   gap: 0.5em;
-  font-size: 1.2em;
+  font-size: 1.8em;
 }
 .hour {
   text-align: center;
