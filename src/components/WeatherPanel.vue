@@ -47,6 +47,9 @@ const condition = computed(() => (data.value ? describeWeather(data.value.code) 
   align-items: center;
   gap: 3vw;
 }
+.now {
+  font-size: 1.3em;
+}
 .main {
   display: flex;
   align-items: center;
