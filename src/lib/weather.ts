@@ -4,8 +4,8 @@ export interface Weather {
   temperature: number
   feelsLike: number
   code: number
-  /** Temperature (°C), precipitation (mm) and probability (%) for each of the next 6 two-hour slots. */
-  nextHours: { time: string; temperature: number; mm: number; probability: number }[]
+  /** Condition, temperature (°C), precipitation (mm) and probability (%) for each of the next 12 hours. */
+  nextHours: { time: string; code: number; temperature: number; mm: number; probability: number }[]
 }
 
 export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
@@ -13,34 +13,23 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     '&current=temperature_2m,apparent_temperature,weather_code' +
     // Hourly data starts at the current (already begun) hour; fetch 13 and drop it.
-    '&hourly=temperature_2m,precipitation,precipitation_probability&forecast_hours=13&timezone=Europe%2FTallinn'
+    '&hourly=weather_code,temperature_2m,precipitation,precipitation_probability&forecast_hours=13&timezone=Europe%2FTallinn'
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Open-Meteo: HTTP ${res.status}`)
   const j = await res.json()
-  const hours: Weather['nextHours'] = j.hourly.time
-    .map((time: string, i: number) => ({
-      time: time.slice(11, 16),
-      temperature: j.hourly.temperature_2m[i],
-      mm: j.hourly.precipitation[i],
-      probability: j.hourly.precipitation_probability[i],
-    }))
-    .slice(1)
-  // Merge hour pairs into 2-hour slots: temperature at the slot start, total rain, highest chance.
-  const slots: Weather['nextHours'] = []
-  for (let i = 0; i < hours.length; i += 2) {
-    const [a, b] = [hours[i], hours[i + 1]]
-    slots.push({
-      time: a.time,
-      temperature: a.temperature,
-      mm: Math.round((a.mm + b.mm) * 10) / 10,
-      probability: Math.max(a.probability, b.probability),
-    })
-  }
   return {
     temperature: j.current.temperature_2m,
     feelsLike: j.current.apparent_temperature,
     code: j.current.weather_code,
-    nextHours: slots,
+    nextHours: j.hourly.time
+      .map((time: string, i: number) => ({
+        time: time.slice(11, 16),
+        code: j.hourly.weather_code[i],
+        temperature: j.hourly.temperature_2m[i],
+        mm: j.hourly.precipitation[i],
+        probability: j.hourly.precipitation_probability[i],
+      }))
+      .slice(1),
   }
 }
 

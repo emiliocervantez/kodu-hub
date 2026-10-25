@@ -6,6 +6,7 @@ import { usePolling } from '../lib/usePolling'
 import { settings } from '../lib/settings'
 
 defineProps<{ now: Date }>()
+const emit = defineEmits<{ days: []; hours: [] }>()
 
 const { data, updatedAt, stale } = usePolling(
   () => fetchWeather(settings.lat, settings.lon),
@@ -14,12 +15,14 @@ const { data, updatedAt, stale } = usePolling(
 )
 
 const condition = computed(() => (data.value ? describeWeather(data.value.code) : undefined))
+// Every other hour, starting with the next one; the hourly dialog shows all of them.
+const shownHours = computed(() => data.value?.nextHours.filter((_, i) => i % 2 === 0))
 </script>
 
 <template>
   <div class="weather" :class="{ stale }">
     <div v-if="data && condition" class="row">
-      <div class="now">
+      <div class="now" @click="emit('days')">
         <div class="main">
           <span class="icon">{{ condition[1] }}</span>
           <span class="temp">{{ Math.round(data.temperature) }}°</span>
@@ -27,12 +30,12 @@ const condition = computed(() => (data.value ? describeWeather(data.value.code) 
         </div>
         <div class="desc">{{ condition[0] }}</div>
       </div>
-      <div class="hours">
-        <div v-for="h in data.nextHours" :key="h.time" class="hour">
+      <div class="hours" @click="emit('hours')">
+        <div v-for="h in shownHours" :key="h.time" class="hour">
           <div class="h-time">{{ h.time }}</div>
           <div class="h-temp">{{ Math.round(h.temperature) }}°</div>
           <div>💧 {{ h.probability }}%</div>
-          <div class="h-mm">{{ h.mm }} мм</div>
+          <div class="h-mm">{{ h.mm === 0 && h.probability > 0 ? '<0.1' : h.mm }} мм</div>
         </div>
       </div>
     </div>

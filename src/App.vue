@@ -13,12 +13,14 @@ const SettingsPanel = defineAsyncComponent(() => import('./components/SettingsPa
 const TimetablePanel = defineAsyncComponent(() => import('./components/TimetablePanel.vue'))
 const SearchPanel = defineAsyncComponent(() => import('./components/SearchPanel.vue'))
 const ForecastPanel = defineAsyncComponent(() => import('./components/ForecastPanel.vue'))
+const HourlyForecastPanel = defineAsyncComponent(() => import('./components/HourlyForecastPanel.vue'))
 const CalendarPanel = defineAsyncComponent(() => import('./components/CalendarPanel.vue'))
 
 const now = useNow()
 const showSettings = ref(false)
 const showSearch = ref(false)
 const showForecast = ref(false)
+const showHourly = ref(false)
 const showCalendar = ref(false)
 const timetableFor = ref<TimetableTarget>()
 
@@ -42,7 +44,7 @@ watchEffect(
       <WatchRow v-for="w in settings.watches" :key="w.id" :watch="w" :now="now" @click="timetableFor = w" />
       <p v-if="settings.watches.length === 0" class="empty">Добавьте маршрут в настройках ⚙</p>
     </section>
-    <WeatherPanel class="bottom" :now="now" @click="showForecast = true" />
+    <WeatherPanel class="bottom" :now="now" @days="showForecast = true" @hours="showHourly = true" />
     <div class="corner">
       <button aria-label="Расписание" @click="showSearch = true">
         <svg viewBox="0 0 24 24" width="0.85em" height="0.85em" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
@@ -56,6 +58,7 @@ watchEffect(
     <SearchPanel v-if="showSearch" @close="showSearch = false" @show="showTimetable" />
     <TimetablePanel v-if="timetableFor" :watch="timetableFor" @close="timetableFor = undefined" />
     <ForecastPanel v-if="showForecast" @close="showForecast = false" />
+    <HourlyForecastPanel v-if="showHourly" @close="showHourly = false" />
     <CalendarPanel v-if="showCalendar" @close="showCalendar = false" />
   </main>
 </template>
