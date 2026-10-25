@@ -33,6 +33,7 @@ const shownHours = computed(() => data.value?.nextHours.filter((_, i) => i % 2 =
       <div class="hours" @click="emit('hours')">
         <div v-for="h in shownHours" :key="h.time" class="hour">
           <div class="h-time">{{ h.time }}</div>
+          <div class="h-icon" :title="describeWeather(h.code)[0]">{{ describeWeather(h.code)[1] }}</div>
           <div class="h-temp">{{ Math.round(h.temperature) }}°</div>
           <div>💧 {{ h.probability }}%</div>
           <div class="h-mm">{{ h.mm === 0 && h.probability > 0 ? '<0.1' : h.mm }} мм</div>
@@ -52,6 +53,10 @@ const shownHours = computed(() => data.value?.nextHours.filter((_, i) => i % 2 =
 }
 .now {
   font-size: 1.3em;
+}
+.now,
+.hours {
+  cursor: pointer;
 }
 .main {
   display: flex;
@@ -83,6 +88,9 @@ const shownHours = computed(() => data.value?.nextHours.filter((_, i) => i % 2 =
 }
 .hour {
   text-align: center;
+}
+.h-icon {
+  font-size: 1.3em;
 }
 .h-temp {
   font-size: 1.3em;

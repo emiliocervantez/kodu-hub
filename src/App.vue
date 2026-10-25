@@ -75,7 +75,6 @@ main {
 }
 .bottom {
   grid-column: 1 / -1;
-  cursor: pointer;
 }
 .clickable {
   cursor: pointer;
