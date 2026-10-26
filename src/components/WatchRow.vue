@@ -52,6 +52,7 @@ const times = computed(() => {
   padding: 0.5em 0;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
+  font-size: 1.3em;
 }
 .route {
   font-size: 2.2em;

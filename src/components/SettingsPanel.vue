@@ -46,6 +46,11 @@ function done() {
   emit('close')
 }
 
+// Settings are already saved on every change, so nothing is lost.
+function reload() {
+  location.reload()
+}
+
 function remove(id: string) {
   settings.watches = settings.watches.filter((w) => w.id !== id)
 }
@@ -156,6 +161,7 @@ function setTime(key: 'lightFrom' | 'darkFrom', d: unknown) {
     <Message v-if="error" severity="error" class="error">{{ error }}</Message>
 
     <template #footer>
+      <Button label="↻ Обновить страницу" severity="secondary" text @click="reload" />
       <Button label="Готово" @click="done" />
     </template>
   </Dialog>

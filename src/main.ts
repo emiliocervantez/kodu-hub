@@ -4,6 +4,19 @@ import Aura from '@primeuix/themes/aura'
 import App from './App.vue'
 import './style.css'
 
+// A redeploy replaces the hashed chunks of lazily loaded panels, so a page open since before it
+// can't open them anymore. Reload to pick up the new build, at most once a minute to avoid a loop.
+window.addEventListener('vite:preloadError', () => {
+  try {
+    const last = Number(sessionStorage.getItem('reloadedAt'))
+    if (Date.now() - last < 60_000) return
+    sessionStorage.setItem('reloadedAt', String(Date.now()))
+  } catch {
+    // Storage unavailable: reload anyway.
+  }
+  location.reload()
+})
+
 createApp(App)
   .use(PrimeVue, {
     theme: {
