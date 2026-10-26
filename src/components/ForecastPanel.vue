@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Message from 'primevue/message'
+import RainInfoHeader from './RainInfoHeader.vue'
 import { dayLabel, describeWeather, fetchDailyForecast, type DayForecast } from '../lib/weather'
 import { settings } from '../lib/settings'
 
@@ -9,6 +10,14 @@ const emit = defineEmits<{ close: [] }>()
 
 const days = ref<DayForecast[]>()
 const error = ref('')
+
+const rainScale: [string, string][] = [
+  ['<1', 'почти сухо, отдельные капли'],
+  ['1–5', 'небольшой дождь'],
+  ['5–15', 'умеренный дождь, мокро весь день'],
+  ['15–50', 'сильный дождь, лужи и потоки'],
+  ['>50', 'очень сильный дождь, возможны подтопления'],
+]
 
 onMounted(async () => {
   try {
@@ -24,11 +33,18 @@ onMounted(async () => {
     :visible="true"
     modal
     dismissable-mask
-    header="Прогноз на 7 дней"
     :draggable="false"
     :style="{ width: 'min(75rem, 95vw)' }"
     @update:visible="emit('close')"
   >
+    <template #header>
+      <RainInfoHeader
+        title="Прогноз на 7 дней"
+        caption="Количество осадков за сутки, мм:"
+        :rows="rainScale"
+        note="💧 % — наибольшая за сутки вероятность дождя (≥0.1 мм) в каком-либо часе."
+      />
+    </template>
     <Message v-if="error" severity="error">{{ error }}</Message>
     <p v-else-if="!days" class="muted">Загрузка…</p>
     <div v-else class="days">

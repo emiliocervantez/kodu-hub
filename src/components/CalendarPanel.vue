@@ -56,11 +56,13 @@ const monthHolidays = computed(() =>
 
 <style scoped>
 .calendar {
-  font-size: 1.15rem;
+  --p-datepicker-date-width: 3.5rem;
+  --p-datepicker-date-height: 3.5rem;
+  font-size: 1.6rem;
 }
 .calendar :deep(.p-datepicker-select-month),
 .calendar :deep(.p-datepicker-select-year) {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 .holiday,
@@ -72,7 +74,8 @@ const monthHolidays = computed(() =>
   list-style: none;
   margin: 1rem 0 0;
   padding: 0;
-  max-width: 22rem;
+  max-width: 32rem;
+  font-size: 1.3rem;
 }
 .holidays li + li {
   margin-top: 0.3rem;
