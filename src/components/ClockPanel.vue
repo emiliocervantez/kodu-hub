@@ -2,13 +2,10 @@
 import { computed } from 'vue'
 
 const props = defineProps<{ now: Date }>()
-const tz = 'Europe/Tallinn'
 
-const time = computed(() =>
-  props.now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: tz }),
-)
+const time = computed(() => props.now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
 const date = computed(() =>
-  props.now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }),
+  props.now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }),
 )
 </script>
 

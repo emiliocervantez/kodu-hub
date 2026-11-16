@@ -18,8 +18,8 @@ describe('scheduledTheme', () => {
     expect(scheduledTheme(at('12:00'), '22:00', '06:00')).toBe('dark')
   })
 
-  it('uses Tallinn time regardless of the device zone', () => {
-    // 04:30 UTC = 07:30 Tallinn
+  it('uses device time, not UTC', () => {
+    // 04:30 UTC = 07:30 on the (Tallinn) test device
     expect(scheduledTheme(new Date('2026-09-30T04:30:00Z'), '07:00', '21:00')).toBe('light')
   })
 })

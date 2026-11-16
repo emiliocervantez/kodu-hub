@@ -33,7 +33,7 @@ describe('formatDeparture', () => {
     expect(formatDeparture(60, now)).toBe('60 мин')
   })
 
-  it('shows Tallinn clock time beyond an hour', () => {
+  it('shows device clock time beyond an hour', () => {
     expect(formatDeparture(75, now)).toBe('10:15')
   })
 })

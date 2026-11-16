@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupByHour, serviceDates } from './timetable'
+import { deviceShiftSec, groupByHour, serviceDates } from './timetable'
 
 describe('serviceDates', () => {
   it('uses today when it matches', () => {
@@ -41,5 +41,17 @@ describe('groupByHour', () => {
       { hour: '23', minutes: ['45'] },
       { hour: '00', minutes: ['05'] },
     ])
+  })
+
+  it('shifts to device time, wrapping past midnight both ways', () => {
+    expect(groupByHour([23 * 3600 + 45 * 60], 3600)).toEqual([{ hour: '00', minutes: ['45'] }])
+    expect(groupByHour([15 * 60], -3600)).toEqual([{ hour: '23', minutes: ['15'] }])
+  })
+})
+
+describe('deviceShiftSec', () => {
+  it('is zero on a Tallinn device', () => {
+    expect(deviceShiftSec('20260930')).toBe(0)
+    expect(deviceShiftSec('20261231')).toBe(0)
   })
 })

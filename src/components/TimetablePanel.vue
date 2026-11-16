@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Message from 'primevue/message'
 import { fetchStopTimes, findStopId } from '../lib/peatus'
-import { groupByHour, serviceDates, type HourRow, type TimetableTarget } from '../lib/timetable'
+import { deviceShiftSec, groupByHour, serviceDates, type HourRow, type TimetableTarget } from '../lib/timetable'
 
 const props = defineProps<{ watch: TimetableTarget }>()
 const emit = defineEmits<{ close: [] }>()
@@ -24,12 +24,12 @@ onMounted(async () => {
     )
     const same = saturday.length === sunday.length && saturday.every((s, i) => s === sunday[i])
     columns.value = [
-      { title: 'Будни', rows: groupByHour(workday) },
+      { title: 'Будни', rows: groupByHour(workday, deviceShiftSec(dates.workday)) },
       ...(same
-        ? [{ title: 'Выходные', rows: groupByHour(saturday) }]
+        ? [{ title: 'Выходные', rows: groupByHour(saturday, deviceShiftSec(dates.saturday)) }]
         : [
-            { title: 'Суббота', rows: groupByHour(saturday) },
-            { title: 'Воскресенье', rows: groupByHour(sunday) },
+            { title: 'Суббота', rows: groupByHour(saturday, deviceShiftSec(dates.saturday)) },
+            { title: 'Воскресенье', rows: groupByHour(sunday, deviceShiftSec(dates.sunday)) },
           ]),
     ]
   } catch (e) {
