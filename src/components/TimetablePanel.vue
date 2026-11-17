@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import Dialog from 'primevue/dialog'
 import Message from 'primevue/message'
 import { fetchStopTimes, findStopId } from '../lib/peatus'
+import { settings } from '../lib/settings'
 import { deviceShiftSec, groupByHour, serviceDates, type HourRow, type TimetableTarget } from '../lib/timetable'
 
 const props = defineProps<{ watch: TimetableTarget }>()
@@ -22,14 +23,16 @@ onMounted(async () => {
     const [workday, saturday, sunday] = await Promise.all(
       [dates.workday, dates.saturday, dates.sunday].map((d) => fetchStopTimes(w.stopId!, w.route, d)),
     )
+    // Peatus times are Tallinn; shift them only when showing device time.
+    const shift = (date: string) => (settings.deviceTimeZone ? deviceShiftSec(date) : 0)
     const same = saturday.length === sunday.length && saturday.every((s, i) => s === sunday[i])
     columns.value = [
-      { title: 'Будни', rows: groupByHour(workday, deviceShiftSec(dates.workday)) },
+      { title: 'Будни', rows: groupByHour(workday, shift(dates.workday)) },
       ...(same
-        ? [{ title: 'Выходные', rows: groupByHour(saturday, deviceShiftSec(dates.saturday)) }]
+        ? [{ title: 'Выходные', rows: groupByHour(saturday, shift(dates.saturday)) }]
         : [
-            { title: 'Суббота', rows: groupByHour(saturday, deviceShiftSec(dates.saturday)) },
-            { title: 'Воскресенье', rows: groupByHour(sunday, deviceShiftSec(dates.sunday)) },
+            { title: 'Суббота', rows: groupByHour(saturday, shift(dates.saturday)) },
+            { title: 'Воскресенье', rows: groupByHour(sunday, shift(dates.sunday)) },
           ]),
     ]
   } catch (e) {

@@ -1,4 +1,5 @@
 // Open-Meteo, no key: https://open-meteo.com/en/docs
+import { displayTimeZone } from './settings'
 
 export interface Weather {
   temperature: number
@@ -14,7 +15,7 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
     '&current=temperature_2m,apparent_temperature,weather_code' +
     // Hourly data starts at the current (already begun) hour; fetch 13 and drop it.
     '&hourly=weather_code,temperature_2m,precipitation,precipitation_probability&forecast_hours=13' +
-    // Unix times, labelled below in the device zone.
+    // Unix times, labelled below in the display zone.
     '&timeformat=unixtime'
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Open-Meteo: HTTP ${res.status}`)
@@ -25,7 +26,11 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
     code: j.current.weather_code,
     nextHours: j.hourly.time
       .map((time: number, i: number) => ({
-        time: new Date(time * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        time: new Date(time * 1000).toLocaleTimeString('ru-RU', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: displayTimeZone(),
+        }),
         code: j.hourly.weather_code[i],
         temperature: j.hourly.temperature_2m[i],
         mm: j.hourly.precipitation[i],

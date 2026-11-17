@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
@@ -8,7 +8,7 @@ import Message from 'primevue/message'
 import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 import RoutePicker, { type Picked } from './RoutePicker.vue'
-import { MAX_WATCHES, settings } from '../lib/settings'
+import { MAX_WATCHES, settings, TALLINN } from '../lib/settings'
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -22,7 +22,9 @@ const THEMES = [
   { label: 'Светлая', value: 'light' },
 ]
 
-const canAdd = computed(() => !!picked.value?.stop.siriId)
+const deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+const canAdd =computed(() => !!picked.value?.stop.siriId)
 
 function add() {
   const p = picked.value
@@ -50,6 +52,10 @@ function done() {
 function reload() {
   location.reload()
 }
+
+// Time zone change: reload so every time (weather, timetable) is re-rendered in the new zone.
+// 'post' runs after the settings watcher has saved to localStorage.
+watch(() => settings.deviceTimeZone, reload, { flush: 'post' })
 
 function remove(id: string) {
   settings.watches = settings.watches.filter((w) => w.id !== id)
@@ -142,6 +148,14 @@ function setTime(key: 'lightFrom' | 'darkFrom', d: unknown) {
           />
         </label>
       </div>
+    </section>
+
+    <section>
+      <h3>Часовой пояс</h3>
+      <label class="inline">
+        <ToggleSwitch v-model="settings.deviceTimeZone" /> Как на устройстве
+        <span class="muted">({{ settings.deviceTimeZone ? deviceZone : TALLINN }})</span>
+      </label>
     </section>
 
     <section>

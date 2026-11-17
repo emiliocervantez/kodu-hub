@@ -22,10 +22,12 @@ export interface Settings {
   lat: number
   lon: number
   theme: Theme
-  /** When on, the theme follows the lightFrom/darkFrom schedule (HH:MM, Tallinn time) instead of `theme`. */
+  /** When on, the theme follows the lightFrom/darkFrom schedule (HH:MM, display zone) instead of `theme`. */
   autoTheme: boolean
   lightFrom: string
   darkFrom: string
+  /** Show times in the device's time zone; off: always Tallinn. */
+  deviceTimeZone: boolean
 }
 
 const KEY = 'kodu-hub:settings'
@@ -37,6 +39,7 @@ const DEFAULTS: Settings = {
   autoTheme: false,
   lightFrom: '07:00',
   darkFrom: '21:00',
+  deviceTimeZone: true,
 }
 
 function load(): Settings {
@@ -50,6 +53,13 @@ function load(): Settings {
 }
 
 export const settings = reactive<Settings>(load())
+
+export const TALLINN = 'Europe/Tallinn'
+
+/** `timeZone` option for Intl formatting: undefined = device zone. */
+export function displayTimeZone(): string | undefined {
+  return settings.deviceTimeZone ? undefined : TALLINN
+}
 
 watch(
   settings,
